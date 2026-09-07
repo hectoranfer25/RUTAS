@@ -46,24 +46,24 @@ def require_ready():
         raise HTTPException(status_code=500, detail={"code": "DATA_ERROR", "message": "No se pudo cargar el dataset.", "warnings": warnings})
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health():
     return {"status": "ok" if manager else "error", "code": "IDS26-E5T8", "warnings": warnings}
 
 
-@app.get("/routes")
+@app.get("/api/routes")
 def get_routes():
     require_ready()
     return {"routes": routes, "warnings": warnings}
 
 
-@app.get("/locations")
+@app.get("/api/locations")
 def get_locations():
     require_ready()
     return {"load": loads, "dump": dumps, "warnings": warnings}
 
 
-@app.post("/simulations/start")
+@app.post("/api/simulations/start")
 def start_simulation():
     require_ready()
     if MIN_SPEED < 0 or MAX_SPEED <= MIN_SPEED:
@@ -87,14 +87,14 @@ def start_simulation():
         raise HTTPException(status_code=422, detail={"code": "NO_ROUTE", "message": str(exc)}) from exc
 
 
-@app.post("/simulations/reset")
+@app.post("/api/simulations/reset")
 def reset_simulation():
     require_ready()
     manager.reset()
     return {"status": "reset"}
 
 
-@app.get("/simulations/current")
+@app.get("/api/simulations/current")
 def current_simulation():
     require_ready()
     manager.tick_if_needed()
@@ -104,7 +104,7 @@ def current_simulation():
     return {"status": "running", **snapshot}
 
 
-@app.get("/simulations/report")
+@app.get("/api/simulations/report")
 def simulation_report():
     require_ready()
     manager.tick_if_needed()
