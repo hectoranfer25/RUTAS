@@ -10,11 +10,11 @@ from .simulation import SimulationManager
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_FILE = os.getenv("DATA_FILE", str(BASE_DIR / "data" / "input.json"))
-SEED = int(os.getenv("RANDOM_SEED", "5923"))
-MIN_SPEED = float(os.getenv("MIN_SPEED_KMH", "22"))
-MAX_SPEED = float(os.getenv("MAX_SPEED_KMH", "52"))
-TICK = int(os.getenv("TICK_SECONDS", "3"))
-SNAP_MAX = float(os.getenv("SNAP_MAX_METERS", "2000"))
+SEED = int(os.getenv("RANDOM_SEED") or "5923")
+MIN_SPEED = float(os.getenv("MIN_SPEED_KMH") or "22")
+MAX_SPEED = float(os.getenv("MAX_SPEED_KMH") or "52")
+TICK = int(os.getenv("TICK_SECONDS") or "3")
+SNAP_MAX = float(os.getenv("SNAP_MAX_METERS") or "2000")
 
 try:
     routes, loads, dumps, warnings = load_and_validate(DATA_FILE)
