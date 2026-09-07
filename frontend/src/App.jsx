@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
-const API = import.meta.env.VITE_API_URL || "https://rutas-psi.vercel.app";
+const API = import.meta.env.VITE_API_URL || "/api";
 
 const truckIcon = L.divIcon({
   className: "truck-marker",  
