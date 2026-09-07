@@ -1,2 +1,11 @@
+[project]
+name = "ids26-e5t8-backend"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0"
+]
+
 [tool.vercel]
 entrypoint = "backend.app.main:app"
