@@ -7,3 +7,6 @@ dependencies = [
     "uvicorn[standard]==0.34.0"
 ]
 
+[tool.vercel]
+entrypoint = "backend.app.main:app"
+
