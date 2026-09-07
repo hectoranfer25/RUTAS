@@ -28,25 +28,58 @@ class SimulationManager:
         self.snap_max = snap_max
         self.lock = threading.Lock()
         self.state = None
+        self._assignment_cache = None
 
     def _build_assignments(self, rng):
-        pairs = []
-        for load in self.loads:
-            lnode, _ = self.network.nearest_node(load["coor"], self.snap_max)
-            if lnode is None:
-                continue
+        # Se calcula una sola vez. Antes se ejecutaba Dijkstra para cada
+        # combinación carga-descarga (30 x 139 = 4,170 rutas).
+        if self._assignment_cache is None:
+            pairs = []
+
+            load_nodes = {}
+            for load in self.loads:
+                lnode, _ = self.network.nearest_node(load["coor"], self.snap_max)
+                if lnode is not None:
+                    load_nodes[load["id"]] = lnode
+
+            dump_nodes = {}
             for dump in self.dumps:
                 dnode, _ = self.network.nearest_node(dump["coor"], self.snap_max)
-                if dnode is None:
-                    continue
-                result = self.network.shortest_path(lnode, dnode)
-                if result:
-                    path, distance = result
-                    pairs.append((load, dump, path, distance))
-        if not pairs:
-            raise ValueError("No existe ningún par carga-descarga alcanzable.")
-        rng.shuffle(pairs)
-        return pairs
+                if dnode is not None:
+                    dump_nodes[dump["id"]] = dnode
+
+            # Un Dijkstra por nodo de carga, en lugar de uno por cada
+            # combinación carga-descarga.
+            loads_by_node = {}
+            for load in self.loads:
+                lnode = load_nodes.get(load["id"])
+                if lnode is not None:
+                    loads_by_node.setdefault(lnode, []).append(load)
+
+            for lnode, loads_at_node in loads_by_node.items():
+                distances, previous = self.network._dijkstra(lnode)
+
+                for dump in self.dumps:
+                    dnode = dump_nodes.get(dump["id"])
+                    if dnode is None or dnode not in distances:
+                        continue
+
+                    path = self.network._reconstruct_path(lnode, dnode, previous)
+                    if path:
+                        distance = distances[dnode]
+                        for load in loads_at_node:
+                            pairs.append((load, dump, path, distance))
+
+            if not pairs:
+                raise ValueError("No existe ningún par carga-descarga alcanzable.")
+
+            self._assignment_cache = pairs
+
+        # Copiamos antes de mezclar para que los siguientes inicios
+        # sigan siendo deterministas y no reconstruyan las rutas.
+        candidates = list(self._assignment_cache)
+        rng.shuffle(candidates)
+        return candidates
 
     def start(self):
         with self.lock:

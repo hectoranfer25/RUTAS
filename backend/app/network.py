@@ -27,6 +27,9 @@ class RoadNetwork:
         self.routes = routes
         self.adj: dict[tuple[float, float], list[Edge]] = defaultdict(list)
         self.route_ids_by_edge: dict[tuple[tuple[float, float], tuple[float, float]], int] = {}
+        self._nearest_cache = {}
+        self._path_cache = {}
+        self._dijkstra_cache = {}
         for route in routes:
             points = [tuple(p) for p in route["points"]]
             for a, b in zip(points, points[1:]):
@@ -44,44 +47,78 @@ class RoadNetwork:
 
     def nearest_node(self, coord: list[float], max_m: float) -> tuple[tuple[float, float] | None, float]:
         point = tuple(coord)
+        key = (point, max_m)
+        if key in self._nearest_cache:
+            return self._nearest_cache[key]
+
         best = None
         best_d = float("inf")
         for node in self.adj:
             d = haversine(point, node)
             if d < best_d:
                 best, best_d = node, d
-        if best is None or best_d > max_m:
-            return None, best_d
-        return best, best_d
 
-    def shortest_path(self, start, goal):
-        if start not in self.adj or goal not in self.adj:
-            return None
+        result = (None, best_d) if best is None or best_d > max_m else (best, best_d)
+        self._nearest_cache[key] = result
+        return result
+
+    def _dijkstra(self, start):
+        if start in self._dijkstra_cache:
+            return self._dijkstra_cache[start]
+
         queue = [(0.0, start)]
         dist = {start: 0.0}
         prev = {}
+
         while queue:
             cost, node = heapq.heappop(queue)
             if cost != dist.get(node):
                 continue
-            if node == goal:
-                break
             for edge in self.adj[node]:
                 nc = cost + edge.distance_m
                 if nc < dist.get(edge.target, float("inf")):
                     dist[edge.target] = nc
                     prev[edge.target] = node
                     heapq.heappush(queue, (nc, edge.target))
-        if goal not in dist:
+
+        self._dijkstra_cache[start] = (dist, prev)
+        return dist, prev
+
+    @staticmethod
+    def _reconstruct_path(start, goal, prev):
+        if goal == start:
+            return [start]
+        if goal not in prev:
             return None
+
         path = []
         cur = goal
         while cur != start:
             path.append(cur)
-            cur = prev[cur]
+            cur = prev.get(cur)
+            if cur is None:
+                return None
         path.append(start)
         path.reverse()
-        return path, dist[goal]
+        return path
+
+    def shortest_path(self, start, goal):
+        if start not in self.adj or goal not in self.adj:
+            return None
+
+        key = (start, goal)
+        if key in self._path_cache:
+            return self._path_cache[key]
+
+        dist, prev = self._dijkstra(start)
+        if goal not in dist:
+            self._path_cache[key] = None
+            return None
+
+        path = self._reconstruct_path(start, goal, prev)
+        result = (path, dist[goal]) if path else None
+        self._path_cache[key] = result
+        return result
 
     def connected_components(self):
         seen = set()
