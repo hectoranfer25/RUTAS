@@ -166,9 +166,9 @@ export default function App() {
             <h2>Estado actual</h2>
             <div className="status">
               <span className={`dot ${simulation.status === "running" ? "ok" : ""}`}></span>
-              {simulation.status === "running" ? "Simulación activa" : "INICIA LA SIMULACION"}
-               <h3>recuerda que al iniciar la simulacion puede demorar unos cuantos segundos</h3>
+              {simulation.status === "running" ? "Simulación activa" : "INICIA LA SIMULACION"}              
             </div>
+            <div className="muted">recuerda que al iniciar la simulacion puede demorar unos cuantos segundos</div>}             
             {simulation.simulation_id && (
               <small>Seed: {simulation.seed} · ID: {simulation.simulation_id.slice(0, 8)}</small>
             )}
