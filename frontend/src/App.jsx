@@ -113,7 +113,7 @@ export default function App() {
           <h1>SIMULADOR DE RUTAS - CAMIONES  </h1>          
         </div>
         <div className="actions">
-          <button onClick={start}>▶ Iniciar / reiniciar</button>
+          <button onClick={start}>▶ Iniciar Simulacion</button>
           <button className="secondary" onClick={reset}>■ Detener</button>
         </div>
       </header>
@@ -166,7 +166,7 @@ export default function App() {
             <h2>Estado actual</h2>
             <div className="status">
               <span className={`dot ${simulation.status === "running" ? "ok" : ""}`}></span>
-              {simulation.status === "running" ? "Simulación activa" : "Sin simulación"}
+              {simulation.status === "running" ? "Simulación activa" : "Sin simulación, recuerda que al iniciar la simulacion puede demorar unos cuantos segundos"}
             </div>
             {simulation.simulation_id && (
               <small>Seed: {simulation.seed} · ID: {simulation.simulation_id.slice(0, 8)}</small>
